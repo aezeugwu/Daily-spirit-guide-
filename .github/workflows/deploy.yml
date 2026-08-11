@@ -1,0 +1,64 @@
+name: Build and deploy to GitHub Pages
+
+# This workflow does everything for you: it finds the .zip file you
+# uploaded to the repo, unzips it, installs dependencies, builds the
+# app, and publishes it to GitHub Pages. You only ever need to upload
+# two files to this repo: the .zip package, and this workflow file.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Find and unzip the package
+        run: |
+          ZIPFILE=$(ls *.zip | head -n 1)
+          echo "Found package: $ZIPFILE"
+          unzip -q "$ZIPFILE" -d extracted
+          echo "Contents after unzip:"
+          find extracted -maxdepth 2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: extracted/sovereign-practice-engine
+        run: npm install
+
+      - name: Build
+        working-directory: extracted/sovereign-practice-engine
+        run: npm run build
+
+      - name: Upload build output
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: extracted/sovereign-practice-engine/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
