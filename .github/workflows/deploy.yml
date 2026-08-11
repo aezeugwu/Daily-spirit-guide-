@@ -1,10 +1,5 @@
 name: Build and deploy to GitHub Pages
 
-# This workflow does everything for you: it finds the .zip file you
-# uploaded to the repo, unzips it, installs dependencies, builds the
-# app, and publishes it to GitHub Pages. You only ever need to upload
-# two files to this repo: the .zip package, and this workflow file.
-
 on:
   push:
     branches: [main]
@@ -46,6 +41,9 @@ jobs:
       - name: Build
         working-directory: extracted/sovereign-practice-engine
         run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
 
       - name: Upload build output
         uses: actions/upload-pages-artifact@v3
